@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.3
+
+- SKILL.md no longer relies on the agent guessing what `SKILL_DIR` means. Installed on a fresh Hermes and run by a small
+  local model, the agent loaded the skill, ran `python3 SKILL_DIR/scripts/job_watch.py check` literally, failed, and fell back to
+  a web search with invented results. Hermes does not substitute that placeholder; `skill_view` returns the real path in
+  `skill_dir`. The skill now says to write that path into every command, never to run a command that still contains the
+  placeholder, and offers a one-line fallback that finds the script itself.
+
 ## 1.0.2
 
 - Reworded the certificate hint. The install-time security scan of Hermes flagged the words "pip install" inside the error

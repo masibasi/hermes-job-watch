@@ -32,7 +32,7 @@ from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-VERSION = "1.0.2"
+VERSION = "1.0.3"
 TIMEOUT = 20
 NEW_WINDOW_DAYS = 7
 

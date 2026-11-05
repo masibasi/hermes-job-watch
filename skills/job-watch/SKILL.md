@@ -1,7 +1,7 @@
 ---
 name: job-watch
 description: Watch public Greenhouse, Lever and Ashby job boards for new early-career-friendly software engineering roles, de-duplicate them, and judge fit from the official job description
-version: 1.0.2
+version: 1.0.3
 author: masibasi
 license: MIT
 metadata:
@@ -15,8 +15,22 @@ Finds software-engineering roles that were not reported before, on the career bo
 list of companies. Code handles fetching, filtering, de-duplication and first-seen dates. You judge fit.
 Everything uses public, keyless job-board APIs. Nothing is posted anywhere and nothing needs an account.
 
-`SKILL_DIR` is the directory containing this SKILL.md file. The helper is `SKILL_DIR/scripts/job_watch.py`
-(Python 3.9+, standard library only). Every command prints one JSON object.
+## Running the helper
+
+The helper is `<skill_dir>/scripts/job_watch.py` (Python 3.9+, standard library only; every command prints
+one JSON object). `<skill_dir>` is the absolute path in the `skill_dir` field that `skill_view` returned when
+you loaded this skill. **Write the real path into every command.** Never run a command that still contains
+the text `<skill_dir>` or `SKILL_DIR`; it will fail. Example with a real path:
+
+```bash
+python3 /home/me/.hermes/skills/job-watch/scripts/job_watch.py check
+```
+
+If you no longer have the path, this one-liner finds the script and runs it (no placeholder to fill in):
+
+```bash
+python3 "$(find "${HERMES_HOME:-$HOME/.hermes}/skills" -path '*job-watch/scripts/job_watch.py' | head -1)" check
+```
 
 ## When to use
 
@@ -27,21 +41,21 @@ Everything uses public, keyless job-board APIs. Nothing is posted anywhere and n
 ## Commands
 
 ```bash
-# Roles not seen before. The first run records a baseline and reports only roles posted in the last 7 days.
-python3 SKILL_DIR/scripts/job_watch.py check
-python3 SKILL_DIR/scripts/job_watch.py check --max 10 --location any
-python3 SKILL_DIR/scripts/job_watch.py check --include "platform|infrastructure" --exclude "security"
+# Roles not seen before. The first successful check of a board records a baseline and reports only roles posted in the last 7 days.
+python3 <skill_dir>/scripts/job_watch.py check
+python3 <skill_dir>/scripts/job_watch.py check --max 10 --location any
+python3 <skill_dir>/scripts/job_watch.py check --include "platform|infrastructure" --exclude "security"
 
 # What was first seen recently (no network call), good for briefings
-python3 SKILL_DIR/scripts/job_watch.py recent --days 3
+python3 <skill_dir>/scripts/job_watch.py recent --days 3
 
 # The official job description for one role, using a url exactly as returned by check or recent
-python3 SKILL_DIR/scripts/job_watch.py details "https://example.com/jobs/123"
+python3 <skill_dir>/scripts/job_watch.py details "https://example.com/jobs/123"
 
 # Which companies are watched, and changing the list
-python3 SKILL_DIR/scripts/job_watch.py boards
-python3 SKILL_DIR/scripts/job_watch.py add-board "Acme" greenhouse acme
-python3 SKILL_DIR/scripts/job_watch.py remove-board "Acme"
+python3 <skill_dir>/scripts/job_watch.py boards
+python3 <skill_dir>/scripts/job_watch.py add-board "Acme" greenhouse acme
+python3 <skill_dir>/scripts/job_watch.py remove-board "Acme"
 ```
 
 The default list is Anthropic, Stripe, Roblox, Datadog, Cloudflare, MongoDB (Greenhouse), Palantir (Lever),

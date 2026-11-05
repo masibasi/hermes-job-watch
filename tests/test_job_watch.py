@@ -150,7 +150,8 @@ def test_board_management(capsys):
 def test_skill_md_matches_the_script():
     text = (SCRIPT.parents[1] / "SKILL.md").read_text()
     assert text.startswith("---\nname: job-watch\n")
-    assert "SKILL_DIR/scripts/job_watch.py" in text            # referenced files are the ones copied at install
+    assert "<skill_dir>/scripts/job_watch.py" in text           # referenced files are the ones copied at install
+    assert "skill_dir" in text and "Never run a command that still contains" in text
     for command in ("check", "recent", "details", "boards", "add-board", "remove-board"):
         assert f"job_watch.py {command}" in text
 
