@@ -1,7 +1,7 @@
 ---
 name: job-watch
 description: Watch public Greenhouse, Lever and Ashby job boards for new early-career-friendly software engineering roles, de-duplicate them, and judge fit from the official job description
-version: 1.0.0
+version: 1.0.1
 author: masibasi
 license: MIT
 metadata:

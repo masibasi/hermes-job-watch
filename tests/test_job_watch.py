@@ -228,3 +228,9 @@ def test_non_certificate_errors_are_not_retried_and_failures_are_raised(monkeypa
         URLError(ssl.SSLCertVerificationError("bad"))))
     with pytest.raises(URLError):
         jw.get_json("https://example.test/z")
+
+
+def test_skill_version_matches_the_script_and_the_changelog():
+    skill = (SCRIPT.parents[1] / "SKILL.md").read_text()
+    assert f"\nversion: {jw.VERSION}\n" in skill
+    assert f"## {jw.VERSION}" in (SCRIPT.parents[3] / "CHANGELOG.md").read_text()
