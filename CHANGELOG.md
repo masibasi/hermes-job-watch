@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.2
+
+- Reworded the certificate hint. The install-time security scan of Hermes flagged the words "pip install" inside the error
+  message as `unpinned_pip_install` (medium). The skill never installs anything; the scan was a false positive on a string,
+  but the new wording gives a clean scan. Found by installing the skill on a fresh Hermes.
+
 ## 1.0.1
 
 - Verify certificates with the operating system's CA bundle when Python has none. Some macOS Pythons ship

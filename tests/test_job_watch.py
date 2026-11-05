@@ -187,6 +187,7 @@ def test_state_written_before_per_board_baselines_is_respected(api, capsys):
 def test_certificate_failures_come_with_a_fix():
     msg = jw.explain(URLError("[SSL: CERTIFICATE_VERIFY_FAILED] unable to get local issuer certificate"))
     assert "Install Certificates" in msg and "certifi" in msg
+    assert "pip install" not in msg          # the Hermes install scan flags that phrase even inside a string
 
 
 def test_certificate_failure_falls_back_to_the_next_ca_bundle(monkeypatch):

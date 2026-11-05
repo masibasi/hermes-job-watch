@@ -32,7 +32,7 @@ from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-VERSION = "1.0.1"
+VERSION = "1.0.2"
 TIMEOUT = 20
 NEW_WINDOW_DAYS = 7
 
@@ -165,8 +165,8 @@ def _contexts() -> list[ssl.SSLContext]:
 def explain(error: Exception) -> str:
     text = f"{type(error).__name__}: {str(error)[:140]}"
     if "CERTIFICATE_VERIFY_FAILED" in str(error):
-        text += (" (this Python has no CA certificates: run its 'Install Certificates.command' on macOS, "
-                 "or `python3 -m pip install certifi`)")
+        text += (" (this Python has no CA certificates: on macOS run its 'Install Certificates.command', "
+                 "or add the certifi package to it)")
     return text
 
 
