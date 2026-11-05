@@ -139,14 +139,27 @@ def location_ok(location: str, country: str | None = None, mode: str = "us") -> 
 
 # ----------------------------------------------------------------------------- fetching
 
-def _ssl_context() -> ssl.SSLContext:
-    """Certificates are always verified. Use certifi's bundle when it is installed (some macOS Pythons
-    ship without a CA bundle)."""
+SYSTEM_CA_BUNDLES = ("/etc/ssl/cert.pem", "/etc/ssl/certs/ca-certificates.crt", "/etc/pki/tls/certs/ca-bundle.crt",
+                     "/opt/homebrew/etc/ca-certificates/cert.pem")
+_working_context = 0  # index of the context that last worked, so later requests skip the failing ones
+
+
+def _contexts() -> list[ssl.SSLContext]:
+    """Certificate-verifying contexts, in order: certifi's bundle, the interpreter's defaults, then the
+    operating system's bundle (some macOS Pythons ship without any CA bundle of their own).
+    Verification is never turned off."""
+    found = []
     try:
         import certifi
-        return ssl.create_default_context(cafile=certifi.where())
+        found.append(ssl.create_default_context(cafile=certifi.where()))
     except ImportError:
-        return ssl.create_default_context()
+        pass
+    found.append(ssl.create_default_context())
+    for path in SYSTEM_CA_BUNDLES:
+        if os.path.exists(path):
+            found.append(ssl.create_default_context(cafile=path))
+            break
+    return found
 
 
 def explain(error: Exception) -> str:
@@ -158,9 +171,24 @@ def explain(error: Exception) -> str:
 
 
 def get_json(url: str):
+    global _working_context
     request = Request(url, headers={"User-Agent": f"job-watch/{VERSION}", "Accept": "application/json"})
-    with urlopen(request, timeout=TIMEOUT, context=_ssl_context()) as response:
-        return json.load(response)
+    contexts = _contexts()
+    order = [_working_context] + [i for i in range(len(contexts)) if i != _working_context]
+    failure = None
+    for i in order:
+        if i >= len(contexts):
+            continue
+        try:
+            with urlopen(request, timeout=TIMEOUT, context=contexts[i]) as response:
+                _working_context = i
+                return json.load(response)
+        except URLError as e:
+            if isinstance(e.reason, ssl.SSLCertVerificationError):
+                failure = e  # this CA bundle does not know the server; try the next one
+                continue
+            raise
+    raise failure
 
 
 def _iso_from_ms(ms) -> str | None:

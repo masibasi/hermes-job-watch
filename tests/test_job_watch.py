@@ -187,3 +187,44 @@ def test_state_written_before_per_board_baselines_is_respected(api, capsys):
 def test_certificate_failures_come_with_a_fix():
     msg = jw.explain(URLError("[SSL: CERTIFICATE_VERIFY_FAILED] unable to get local issuer certificate"))
     assert "Install Certificates" in msg and "certifi" in msg
+
+
+def test_certificate_failure_falls_back_to_the_next_ca_bundle(monkeypatch):
+    import io
+    import ssl
+    first, second = object(), object()
+    monkeypatch.setattr(jw, "_contexts", lambda: [first, second])
+    monkeypatch.setattr(jw, "_working_context", 0)
+    seen = []
+
+    def fake_urlopen(request, timeout, context):
+        seen.append(context)
+        if context is first:
+            raise URLError(ssl.SSLCertVerificationError("unable to get local issuer certificate"))
+        return io.BytesIO(b'{"ok": true}')
+
+    monkeypatch.setattr(jw, "urlopen", fake_urlopen)
+    assert jw.get_json("https://example.test/x") == {"ok": True}
+    assert seen == [first, second]
+    assert jw.get_json("https://example.test/y") == {"ok": True}
+    assert seen[-1] is second and seen.count(first) == 1      # the working bundle is remembered
+
+
+def test_non_certificate_errors_are_not_retried_and_failures_are_raised(monkeypatch):
+    import ssl
+    monkeypatch.setattr(jw, "_contexts", lambda: [object(), object()])
+    monkeypatch.setattr(jw, "_working_context", 0)
+    calls = []
+
+    def refuse(request, timeout, context):
+        calls.append(context)
+        raise URLError(ConnectionRefusedError("refused"))
+
+    monkeypatch.setattr(jw, "urlopen", refuse)
+    with pytest.raises(URLError):
+        jw.get_json("https://example.test/z")
+    assert len(calls) == 1
+    monkeypatch.setattr(jw, "urlopen", lambda r, timeout, context: (_ for _ in ()).throw(
+        URLError(ssl.SSLCertVerificationError("bad"))))
+    with pytest.raises(URLError):
+        jw.get_json("https://example.test/z")
